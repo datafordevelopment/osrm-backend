@@ -109,7 +109,7 @@ BOOST_AUTO_TEST_CASE(valid_route_urls)
     CHECK_EQUAL_RANGE(reference_2.coordinates, result_2->coordinates);
     CHECK_EQUAL_RANGE(reference_2.hints, result_2->hints);
 
-    RouteParameters reference_3{false, false, RouteParameters::GeometriesType::GeoJSON,
+    RouteParameters reference_3{false, false, false, RouteParameters::GeometriesType::GeoJSON,
                                 RouteParameters::OverviewType::False, true};
     reference_3.coordinates = coords_1;
     auto result_3 = api::parseParameters<engine::api::RouteParameters>(
@@ -138,6 +138,7 @@ BOOST_AUTO_TEST_CASE(valid_route_urls)
                                  "IAAAEBl-Umfg==")};
     RouteParameters reference_4{false,
                                 false,
+                                false,
                                 RouteParameters::GeometriesType::Polyline,
                                 RouteParameters::OverviewType::Simplified,
                                 boost::optional<bool>{},
@@ -165,6 +166,7 @@ BOOST_AUTO_TEST_CASE(valid_route_urls)
         boost::none, engine::Bearing{200, 10}, engine::Bearing{100, 5},
     };
     RouteParameters reference_5{false,
+                                false,
                                 false,
                                 RouteParameters::GeometriesType::Polyline,
                                 RouteParameters::OverviewType::Simplified,
@@ -247,6 +249,7 @@ BOOST_AUTO_TEST_CASE(valid_route_urls)
                                  "IFAAEBl-Umfg=="),
         boost::none};
     RouteParameters reference_10{false,
+                                false,
                                 false,
                                 RouteParameters::GeometriesType::Polyline,
                                 RouteParameters::OverviewType::Simplified,

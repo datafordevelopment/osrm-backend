@@ -141,6 +141,16 @@ module.exports = function () {
         return this.extractInstructionList(instructions, s => s.maneuver.bearing_after);
     };
 
+    this.progressionList = (instructions) => {
+        // Pull out all the distinct segment distances, skipping the arrive
+        // instructions, and the leading 0 on all timestamps arrays.
+        var pairs = [];
+        for (var i in instructions.progression.duration) {
+            pairs.push(instructions.progression.duration[i]+":"+instructions.progression.distance[i]);
+        }
+        return pairs.join(",");
+    };
+
     this.turnList = (instructions) => {
         return instructions.legs.reduce((m, v) => m.concat(v.steps), [])
             .map(v => {

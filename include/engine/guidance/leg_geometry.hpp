@@ -31,6 +31,13 @@ struct LegGeometry
     // length of the segment in meters
     std::vector<double> segment_distances;
 
+    // Distance/duration progression along the leg
+    struct ProgressStep {
+        double distance;
+        double duration;
+    };
+    std::vector<ProgressStep> progression;
+
     std::size_t FrontIndex(std::size_t segment_index) const
     {
         return segment_offsets[segment_index];

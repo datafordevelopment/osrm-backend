@@ -176,9 +176,34 @@ class RouteAPI : public BaseAPI
                 });
         }
 
-        return json::makeRoute(route,
+        auto result = json::makeRoute(route,
                                json::makeRouteLegs(std::move(legs), std::move(step_geometries)),
                                std::move(json_overview));
+
+        std::vector<util::json::Object> leg_progressions;
+        if (parameters.progression)
+        {
+            util::json::Array durations;
+            util::json::Array distances;
+            for (const auto idx : util::irange<std::size_t>(0UL, leg_geometries.size()))
+            {
+                auto &leg_geometry = leg_geometries[idx];
+                std::for_each(leg_geometry.progression.begin(),
+                              leg_geometry.progression.end(),
+                              [this, &durations, &distances](const guidance::LegGeometry::ProgressStep &step) {
+                                  durations.values.push_back(step.duration);
+                                  distances.values.push_back(step.distance);
+                              });
+            }
+
+            util::json::Object details;
+            details.values["distance"] = std::move(distances);
+            details.values["duration"] = std::move(durations);
+
+            result.values["progression"] = std::move(details);
+        }
+
+        return result;
     }
 
     const RouteParameters &parameters;
