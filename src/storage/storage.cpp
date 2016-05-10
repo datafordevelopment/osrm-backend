@@ -588,22 +588,50 @@ int Storage::Run()
             shared_memory_ptr, SharedDataLayout::BEARING_CLASSID);
         std::copy(bearing_class_id_table.begin(), bearing_class_id_table.end(), bearing_id_ptr);
 
-        auto bearing_class_ptr =
-            shared_layout_ptr->GetBlockPtr<util::guidance::BearingClass, true>(
-                shared_memory_ptr, SharedDataLayout::BEARING_CLASS);
-        std::vector<util::guidance::BearingClass> bearing_class_table;
-        util::deserializeVector(intersection_stream, bearing_class_table);
-        shared_layout_ptr->SetBlockSize<util::guidance::BearingClass>(
-            SharedDataLayout::BEARING_CLASS, bearing_class_table.size());
+        unsigned bearing_blocks = 0;
+        intersection_stream.read((char *)&bearing_blocks, sizeof(unsigned));
+
+        shared_layout_ptr->SetBlockSize<unsigned>(SharedDataLayout::BEARING_OFFSETS,
+                                                  bearing_blocks);
+        shared_layout_ptr->SetBlockSize<typename util::RangeTable<16, true>::BlockT>(
+            SharedDataLayout::BEARING_BLOCKS, bearing_blocks);
+
+        unsigned *bearing_offsets_ptr = shared_layout_ptr->GetBlockPtr<unsigned, true>(
+            shared_memory_ptr, SharedDataLayout::BEARING_OFFSETS);
+        if (shared_layout_ptr->GetBlockSize(SharedDataLayout::BEARING_OFFSETS) > 0)
+        {
+            intersection_stream.read(
+                reinterpret_cast<char *>(bearing_offsets_ptr),
+                shared_layout_ptr->GetBlockSize(SharedDataLayout::BEARING_OFFSETS));
+        }
+
+        unsigned *bearing_blocks_ptr = shared_layout_ptr->GetBlockPtr<unsigned, true>(
+            shared_memory_ptr, SharedDataLayout::BEARING_BLOCKS);
+        if (shared_layout_ptr->GetBlockSize(SharedDataLayout::BEARING_BLOCKS) > 0)
+        {
+            intersection_stream.read(
+                reinterpret_cast<char *>(bearing_blocks_ptr),
+                shared_layout_ptr->GetBlockSize(SharedDataLayout::BEARING_BLOCKS));
+        }
+
+        std::uint64_t num_bearings;
+        intersection_stream >> num_bearings;
+
+        auto bearing_class_ptr = shared_layout_ptr->GetBlockPtr<DiscreteBearing, true>(
+            shared_memory_ptr, SharedDataLayout::BEARING_VALUES);
+        std::vector<DiscreteBearing> bearing_class_table(num_bearings);
+        intersection_stream.read(reinterpret_cast<char *>(&bearing_class_table[0]),
+                                 sizeof(bearing_class_table[0]) * num_bearings);
+        shared_layout_ptr->SetBlockSize<DiscreteBearing>(SharedDataLayout::BEARING_VALUES,
+                                                         num_bearings);
         std::copy(bearing_class_table.begin(), bearing_class_table.end(), bearing_class_ptr);
 
-        auto entry_class_ptr =
-            shared_layout_ptr->GetBlockPtr<util::guidance::EntryClass, true>(
-                shared_memory_ptr, SharedDataLayout::ENTRY_CLASS);
+        auto entry_class_ptr = shared_layout_ptr->GetBlockPtr<util::guidance::EntryClass, true>(
+            shared_memory_ptr, SharedDataLayout::ENTRY_CLASS);
         std::vector<util::guidance::EntryClass> entry_class_table;
         util::deserializeVector(intersection_stream, entry_class_table);
-        shared_layout_ptr->SetBlockSize<util::guidance::EntryClass>(
-            SharedDataLayout::ENTRY_CLASS, entry_class_table.size());
+        shared_layout_ptr->SetBlockSize<util::guidance::EntryClass>(SharedDataLayout::ENTRY_CLASS,
+                                                                    entry_class_table.size());
         std::copy(entry_class_table.begin(), entry_class_table.end(), entry_class_ptr);
     }
 
